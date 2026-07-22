@@ -88,6 +88,67 @@ class Neo4jSettings(BaseSettings):
     connection_timeout: float = Field(default=10.0, description="Connection timeout in seconds")
 
 
+class ScannerSettings(BaseSettings):
+    """Settings for the Repository Scanner module."""
+
+    model_config = SettingsConfigDict(env_prefix="SCANNER_", extra="ignore")
+
+    max_file_size_bytes: int = Field(
+        default=10 * 1024 * 1024,  # 10 MB
+        description=(
+            "Maximum file size in bytes that the scanner will hash and inspect. "
+            "Files larger than this threshold are recorded with scan_status=IGNORED."
+        ),
+    )
+    max_scan_depth: int = Field(
+        default=50,
+        description=(
+            "Maximum directory recursion depth. "
+            "Directories deeper than this are skipped to prevent stack overflow."
+        ),
+    )
+    ignore_patterns: str = Field(
+        default="",
+        description=(
+            "Comma-separated list of additional glob patterns to ignore "
+            "during scanning (supplements the built-in ignore list)."
+        ),
+    )
+    supported_languages: str = Field(
+        default="",
+        description=(
+            "Comma-separated allowlist of language names to scan. "
+            "Empty means all supported languages are included."
+        ),
+    )
+    hash_chunk_size: int = Field(
+        default=65536,  # 64 KB
+        description="Chunk size in bytes used when streaming file contents for SHA-256 hashing.",
+    )
+    db_batch_size: int = Field(
+        default=500,
+        description="Number of RepositoryFile records to bulk-insert per database batch.",
+    )
+
+    @property
+    def ignore_patterns_list(self) -> list[str]:
+        """Return additional ignore patterns as a parsed list.
+
+        Returns:
+            list[str]: Parsed pattern strings; empty list when setting is blank.
+        """
+        return [p.strip() for p in self.ignore_patterns.split(",") if p.strip()]
+
+    @property
+    def supported_languages_list(self) -> list[str]:
+        """Return the supported language allowlist as a parsed list.
+
+        Returns:
+            list[str]: Parsed language name strings; empty list means allow all.
+        """
+        return [lang.strip() for lang in self.supported_languages.split(",") if lang.strip()]
+
+
 class RepositorySettings(BaseSettings):
     """Settings for the Repository Management module."""
 
@@ -183,6 +244,7 @@ class Settings(BaseSettings):
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     neo4j: Neo4jSettings = Field(default_factory=Neo4jSettings)
     repository: RepositorySettings = Field(default_factory=RepositorySettings)
+    scanner: ScannerSettings = Field(default_factory=ScannerSettings)
 
 
 @lru_cache(maxsize=1)

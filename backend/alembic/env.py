@@ -20,6 +20,7 @@ from backend.app.core.config import get_settings  # noqa: E402
 
 # Import all model modules here so Alembic can detect table changes.
 from backend.app.models import repository  # noqa: F401
+from backend.app.models import file  # noqa: F401
 
 # Alembic Config object providing access to alembic.ini values
 config = context.config

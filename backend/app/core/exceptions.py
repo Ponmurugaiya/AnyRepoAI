@@ -217,3 +217,59 @@ class RepositoryEmptyError(AppException):
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             error_code="REPOSITORY_EMPTY",
         )
+
+
+# ── Scanner-specific exceptions ────────────────────────────────────────────────
+
+
+class ScannerError(AppException):
+    """Base class for scanner-specific errors.
+
+    Args:
+        message: Human-readable description of the scan failure.
+    """
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            message=message,
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            error_code="SCANNER_ERROR",
+        )
+
+
+class RepositoryNotReadyError(AppException):
+    """Raised when a scan is requested for a repository that is not yet cloned.
+
+    Args:
+        repository_id: UUID string of the repository that is not ready.
+        current_status: The current clone_status value.
+    """
+
+    def __init__(self, repository_id: str, current_status: str) -> None:
+        super().__init__(
+            message=(
+                f"Repository '{repository_id}' cannot be scanned because its "
+                f"clone status is '{current_status}'. "
+                "Wait until the clone completes (status=READY)."
+            ),
+            status_code=HTTPStatus.CONFLICT,
+            error_code="REPOSITORY_NOT_READY",
+        )
+
+
+class ScanAlreadyRunningError(AppException):
+    """Raised when a scan is requested for a repository that is already scanning.
+
+    Args:
+        repository_id: UUID string of the repository already being scanned.
+    """
+
+    def __init__(self, repository_id: str) -> None:
+        super().__init__(
+            message=(
+                f"Repository '{repository_id}' is already being scanned. "
+                "Wait for the current scan to complete."
+            ),
+            status_code=HTTPStatus.CONFLICT,
+            error_code="SCAN_ALREADY_RUNNING",
+        )
