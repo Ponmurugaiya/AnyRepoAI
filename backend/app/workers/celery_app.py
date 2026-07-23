@@ -1,7 +1,7 @@
 """Celery application factory and task definitions.
 
 The Celery app uses Redis as both the broker and result backend,
-matching the Redis service already running in docker-compose.
+reading connection settings from the application's RedisSettings.
 
 Tasks:
     clone_repository_task: Runs the full clone-and-metadata pipeline

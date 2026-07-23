@@ -19,9 +19,10 @@ Design decisions
 from __future__ import annotations
 
 import asyncio
+import multiprocessing
 import time
 import uuid
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -223,8 +224,13 @@ class RepositoryParserService:
         batch_size = self._settings.parser.parse_batch_size
         max_workers = self._settings.parser.parse_max_workers
         loop = asyncio.get_event_loop()
+        executor_cls = (
+            ThreadPoolExecutor
+            if multiprocessing.current_process().daemon
+            else ProcessPoolExecutor
+        )
 
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with executor_cls(max_workers=max_workers) as executor:
             for batch_start in range(0, total, batch_size):
                 batch = parseable[batch_start:batch_start + batch_size]
                 futures = [

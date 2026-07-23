@@ -27,7 +27,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from backend.app.db.base import AuditMixin, Base
+from backend.app.db.base import AuditMixin, Base, pg_enum
 
 
 class FileStatus(str, enum.Enum):
@@ -139,7 +139,7 @@ class RepositoryFile(Base, AuditMixin):
 
     # ── Language / type detection ─────────────────────────────────────────────
     language: Mapped[ProgrammingLanguage] = mapped_column(
-        Enum(ProgrammingLanguage, name="programming_language", create_type=True),
+        pg_enum(ProgrammingLanguage, name="programming_language"),
         nullable=False,
         default=ProgrammingLanguage.UNKNOWN,
         index=True,

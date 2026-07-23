@@ -4,12 +4,23 @@ All ORM models should inherit from Base to participate in migrations.
 Common fields (id, created_at, updated_at) are provided via mixins.
 """
 
+import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, Enum, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+def pg_enum(enum_class: type[enum.Enum], name: str, *, create_type: bool = True) -> Enum:
+    """Build a PostgreSQL enum column that persists enum values, not member names."""
+    return Enum(
+        enum_class,
+        name=name,
+        create_type=create_type,
+        values_callable=lambda members: [member.value for member in members],
+    )
 
 
 class Base(DeclarativeBase):

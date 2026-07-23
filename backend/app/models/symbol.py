@@ -30,7 +30,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from backend.app.db.base import AuditMixin, Base
+from backend.app.db.base import AuditMixin, Base, pg_enum
 
 
 # ── Enums ──────────────────────────────────────────────────────────────────────
@@ -120,7 +120,7 @@ class FileParseJob(Base, AuditMixin):
         comment="Denormalized FK to repositories.id for bulk queries",
     )
     parse_status: Mapped[ParseStatus] = mapped_column(
-        Enum(ParseStatus, name="parse_status", create_type=True),
+        pg_enum(ParseStatus, name="parse_status"),
         nullable=False,
         default=ParseStatus.QUEUED,
         server_default=ParseStatus.QUEUED.value,
@@ -202,11 +202,11 @@ class Symbol(Base, AuditMixin):
     symbol_name: Mapped[str] = mapped_column(String(512), nullable=False, index=True)
     qualified_name: Mapped[str] = mapped_column(String(1024), nullable=False, index=True)
     symbol_type: Mapped[SymbolType] = mapped_column(
-        Enum(SymbolType, name="symbol_type", create_type=True),
+        pg_enum(SymbolType, name="symbol_type"),
         nullable=False, index=True,
     )
     visibility: Mapped[Visibility] = mapped_column(
-        Enum(Visibility, name="visibility", create_type=True),
+        pg_enum(Visibility, name="visibility"),
         nullable=False, default=Visibility.UNKNOWN,
     )
     start_line: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -343,7 +343,7 @@ class ClassRecord(Base, AuditMixin):
     base_classes: Mapped[str | None] = mapped_column(Text, nullable=True, comment="JSON array")
     interfaces: Mapped[str | None] = mapped_column(Text, nullable=True, comment="JSON array")
     visibility: Mapped[Visibility] = mapped_column(
-        Enum(Visibility, name="visibility", create_type=False),
+        pg_enum(Visibility, name="visibility", create_type=False),
         nullable=False, default=Visibility.PUBLIC,
     )
     is_abstract: Mapped[bool] = mapped_column(
@@ -395,7 +395,7 @@ class FunctionRecord(Base, AuditMixin):
         Boolean, nullable=False, default=False, server_default="false"
     )
     visibility: Mapped[Visibility] = mapped_column(
-        Enum(Visibility, name="visibility", create_type=False),
+        pg_enum(Visibility, name="visibility", create_type=False),
         nullable=False, default=Visibility.PUBLIC,
     )
     parameters: Mapped[str | None] = mapped_column(Text, nullable=True, comment="JSON array")

@@ -33,8 +33,12 @@ out/
 .env.production.local
 npm-debug.log*
 
-# Docker
-.dockerignore
+# Local .env files (never commit secrets)
+!backend/.env.example
+!frontend/.env.example
+
+# Cloned repository storage
+storage/
 
 # OS
 .DS_Store

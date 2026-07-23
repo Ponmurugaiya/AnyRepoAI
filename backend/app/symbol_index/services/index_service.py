@@ -174,6 +174,7 @@ class SymbolIndexService:
         # ── Process files in batches ───────────────────────────────────────────
         try:
             await self._process_files(indexable, repository_id, stats)
+            await self._index_repo.link_parent_symbols(repository_id)
         except Exception as exc:  # noqa: BLE001
             error_msg = f"{type(exc).__name__}: {exc}"
             logger.error(
@@ -269,8 +270,8 @@ class SymbolIndexService:
             key_fn=lambda e: f"{e['repository_id']}::{e['qualified_name']}",
             context=file_record.relative_path,
         )
-
         count = await self._index_repo.bulk_upsert_entries(unique_entries)
+        await self._index_repo.link_parent_symbols(repository_id)
 
         logger.info(
             "File symbol indexing completed",

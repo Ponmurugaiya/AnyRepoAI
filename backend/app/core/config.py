@@ -155,8 +155,8 @@ class RepositorySettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="REPO_", extra="ignore")
 
     clone_root: str = Field(
-        default="/storage/repos",
-        description="Absolute filesystem path where repositories are cloned",
+        default="./storage/repos",
+        description="Filesystem path where repositories are cloned (relative to project root or absolute)",
     )
     clone_timeout: int = Field(
         default=300,
@@ -261,7 +261,9 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Checks backend/.env first, then the project-root .env.
+        # pydantic-settings merges all files found; later files take precedence.
+        env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,

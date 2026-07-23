@@ -14,7 +14,7 @@ from __future__ import annotations
 import uuid
 from typing import Any, Sequence
 
-from sqlalchemy import delete, func, or_, select, text
+from sqlalchemy import delete, func, or_, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -149,8 +149,14 @@ class SymbolIndexRepository:
 
         for batch_start in range(0, len(entries), _BULK_BATCH_SIZE):
             batch = entries[batch_start : batch_start + _BULK_BATCH_SIZE]
+            sanitized_batch = []
+            for entry in batch:
+                row = dict(entry)
+                row.pop("id", None)
+                row["parent_symbol_id"] = None
+                sanitized_batch.append(row)
 
-            stmt = pg_insert(SymbolIndexEntry).values(list(batch))
+            stmt = pg_insert(SymbolIndexEntry).values(sanitized_batch)
             stmt = stmt.on_conflict_do_update(
                 constraint="uq_symbol_index_repo_qualified_name",
                 set_={
@@ -235,6 +241,34 @@ class SymbolIndexRepository:
             deleted_count=count,
         )
         return count
+
+    async def link_parent_symbols(self, repository_id: uuid.UUID) -> int:
+        """Resolve parent_symbol_id from qualified_name hierarchy after bulk insert."""
+        result = await self._session.execute(
+            select(SymbolIndexEntry.id, SymbolIndexEntry.qualified_name).where(
+                SymbolIndexEntry.repository_id == repository_id
+            )
+        )
+        rows = result.all()
+        qname_to_id = {qname: entry_id for entry_id, qname in rows}
+
+        updated = 0
+        for entry_id, qname in rows:
+            parts = qname.split(".")
+            if len(parts) <= 1:
+                continue
+            parent_id = qname_to_id.get(".".join(parts[:-1]))
+            if parent_id is None:
+                continue
+            await self._session.execute(
+                update(SymbolIndexEntry)
+                .where(SymbolIndexEntry.id == entry_id)
+                .values(parent_symbol_id=parent_id)
+            )
+            updated += 1
+
+        await self._session.flush()
+        return updated
 
     # ── Query operations ───────────────────────────────────────────────────────
 
