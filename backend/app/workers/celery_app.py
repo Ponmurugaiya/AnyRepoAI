@@ -38,6 +38,7 @@ def _make_celery() -> Celery:
             "backend.app.workers.celery_app",
             "backend.app.workers.scanner_tasks",
             "backend.app.workers.parser_tasks",
+            "backend.app.symbol_index.workers.index_tasks",
         ],
     )
 

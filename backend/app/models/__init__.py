@@ -17,6 +17,7 @@ from backend.app.models.symbol import (
     SymbolType,
     Visibility,
 )
+from backend.app.symbol_index.models.index import IndexStatus, SymbolIndex, SymbolIndexEntry
 
 __all__ = [
     "Repository",
@@ -34,4 +35,7 @@ __all__ = [
     "RouteRecord",
     "ClassRecord",
     "FunctionRecord",
+    "SymbolIndex",
+    "SymbolIndexEntry",
+    "IndexStatus",
 ]
