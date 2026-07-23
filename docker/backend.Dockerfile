@@ -44,7 +44,11 @@ RUN pip install --no-cache-dir \
     python-multipart==0.0.9 \
     gitpython==3.1.43 \
     celery==5.4.0 \
-    flower==2.0.1
+    flower==2.0.1 \
+    tree-sitter==0.21.3 \
+    tree-sitter-languages==1.10.2 \
+    pytest==8.2.2 \
+    pytest-asyncio==0.23.7
 
 
 # ─── Stage 2: Runtime ────────────────────────────────────────────────────────

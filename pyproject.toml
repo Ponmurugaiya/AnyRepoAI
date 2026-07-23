@@ -46,6 +46,10 @@ dependencies = [
     "gitpython==3.1.43",
     "celery==5.4.0",
     "flower==2.0.1",
+
+    # Code Intelligence Engine — tree-sitter parsing
+    "tree-sitter==0.21.3",
+    "tree-sitter-languages==1.10.2",
 ]
 
 [project.optional-dependencies]
@@ -74,4 +78,4 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+testpaths = ["backend/tests"]

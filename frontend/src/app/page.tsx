@@ -1,63 +1,51 @@
+"use client";
+
 /**
- * Home page — landing/entry point for the Codebase Intelligence Platform.
+ * Home page — repository dashboard.
  *
- * This is a placeholder. The full UI (repository input, analysis dashboard,
- * chat interface) will be built in subsequent milestones.
+ * Shows the URL input for adding repositories and the live list below it.
+ * When a new repo is added, the list is refreshed by bumping a key.
  */
+import { useState } from "react";
+import { AddRepositoryForm } from "@/components/repository/AddRepositoryForm";
+import { RepositoryList } from "@/components/repository/RepositoryList";
+
 export default function HomePage() {
+  const [listKey, setListKey] = useState(0);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <div className="max-w-2xl w-full text-center space-y-6">
-        {/* Logo / wordmark placeholder */}
-        <div className="flex items-center justify-center gap-3">
+    <div className="max-w-5xl mx-auto py-10 px-4 space-y-8">
+
+      {/* Hero header */}
+      <header className="text-center space-y-2 pointer-events-none select-none">
+        <div className="inline-flex items-center justify-center gap-2 mb-1">
           <div
-            className="w-10 h-10 rounded-lg bg-brand-500 flex items-center justify-center"
-            aria-hidden="true"
+            className="w-9 h-9 rounded-lg bg-brand-500 flex items-center justify-center shrink-0"
           >
-            <span className="text-white font-bold text-lg">CI</span>
+            <span className="text-white font-bold text-base">CI</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            Codebase Intelligence
-          </h1>
+          <h1 className="text-2xl font-bold text-white">Codebase Intelligence</h1>
         </div>
-
-        <p className="text-gray-400 text-lg">
-          AI-powered codebase analysis and retrieval. Paste a GitHub repository
-          URL to explore code structure, dependencies, and semantics.
+        <p className="text-gray-400 text-sm max-w-lg mx-auto">
+          Add a GitHub repository URL to clone it, then scan it to explore its
+          language breakdown, file tree, and structure metadata.
         </p>
+      </header>
 
-        {/* Repository URL input — full implementation coming in next milestone */}
-        <div className="flex gap-2">
-          <input
-            type="url"
-            placeholder="https://github.com/owner/repository"
-            aria-label="GitHub repository URL"
-            className={[
-              "flex-1 rounded-lg border border-gray-700 bg-gray-900",
-              "px-4 py-3 text-white placeholder-gray-500",
-              "focus:outline-none focus:ring-2 focus:ring-brand-500",
-              "transition-colors",
-            ].join(" ")}
-            disabled
-          />
-          <button
-            type="button"
-            disabled
-            className={[
-              "rounded-lg bg-brand-500 px-5 py-3 font-semibold text-white",
-              "hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed",
-              "transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500",
-            ].join(" ")}
-            aria-label="Analyze repository"
-          >
-            Analyze
-          </button>
-        </div>
+      {/* Add repository form */}
+      <section className="rounded-xl border border-gray-800 bg-gray-900 p-5 space-y-2">
+        <h2 className="text-sm font-semibold text-white">Add repository</h2>
+        <AddRepositoryForm onAdded={() => setListKey((k) => k + 1)} />
+      </section>
 
-        <p className="text-sm text-gray-600">
-          Repository analysis coming soon — infrastructure foundation is ready.
-        </p>
-      </div>
-    </main>
+      {/* Repository list */}
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+          Repositories
+        </h2>
+        <RepositoryList key={listKey} />
+      </section>
+
+    </div>
   );
 }

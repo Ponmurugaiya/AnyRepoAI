@@ -225,6 +225,35 @@ class AppSettings(BaseSettings):
         return [origin.strip() for origin in value.split(",") if origin.strip()]
 
 
+class ParserSettings(BaseSettings):
+    """Settings for the Code Intelligence Engine parser module."""
+
+    model_config = SettingsConfigDict(env_prefix="PARSER_", extra="ignore")
+
+    parse_batch_size: int = Field(
+        default=20,
+        description=(
+            "Number of files dispatched to the process pool per batch. "
+            "Larger batches improve throughput; smaller batches reduce peak memory."
+        ),
+    )
+    parse_max_workers: int = Field(
+        default=4,
+        description=(
+            "Maximum number of worker processes for parallel parsing. "
+            "Defaults to 4; set to 1 to disable parallelism."
+        ),
+    )
+    parse_timeout_seconds: int = Field(
+        default=60,
+        description="Maximum seconds allowed for parsing a single file.",
+    )
+    max_file_size_bytes: int = Field(
+        default=5 * 1024 * 1024,  # 5 MB
+        description="Files larger than this are skipped by the parser (not scanner limit).",
+    )
+
+
 class Settings(BaseSettings):
     """Root settings aggregator.
 
@@ -245,6 +274,7 @@ class Settings(BaseSettings):
     neo4j: Neo4jSettings = Field(default_factory=Neo4jSettings)
     repository: RepositorySettings = Field(default_factory=RepositorySettings)
     scanner: ScannerSettings = Field(default_factory=ScannerSettings)
+    parser: ParserSettings = Field(default_factory=ParserSettings)
 
 
 @lru_cache(maxsize=1)

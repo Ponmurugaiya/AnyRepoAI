@@ -143,6 +143,11 @@ class RepositoryService:
         Intended to be called from a FastAPI BackgroundTask or Celery worker.
         Manages all status transitions and error handling internally.
 
+        When called from a Celery worker (via ``asyncio.run()``), a fresh
+        ``GitHubClient`` instance is created and closed within the same event
+        loop to avoid "Event loop is closed" errors from the module-level
+        singleton whose connection pool was bound to a different loop.
+
         Pipeline stages:
             1. Load repository record; set status → CLONING.
             2. Fetch metadata from GitHub REST API.
@@ -155,22 +160,32 @@ class RepositoryService:
         Args:
             repository_id: UUID of the repository to process.
         """
-        # We need a fresh session for background execution (the request session
-        # may have already closed).  We import here to avoid circular imports.
         from backend.app.db.session import get_session_context  # noqa: PLC0415
 
-        async with get_session_context() as session:
-            repo_repo = RepositoryRepository(session)
-            repo = await repo_repo.get_by_id(repository_id)
+        # Always create a fresh client so its httpx connection pool is bound
+        # to the current event loop (critical when called from asyncio.run()).
+        fresh_github_client = GitHubClient()
+        try:
+            async with get_session_context() as session:
+                repo_repo = RepositoryRepository(session)
+                repo = await repo_repo.get_by_id(repository_id)
 
-            if repo is None:
-                logger.error(
-                    "run_clone_pipeline called for unknown repository",
-                    repository_id=str(repository_id),
-                )
-                return
+                if repo is None:
+                    logger.error(
+                        "run_clone_pipeline called for unknown repository",
+                        repository_id=str(repository_id),
+                    )
+                    return
 
-            await self._execute_pipeline(repo_repo, repo)
+                # Temporarily swap to the fresh client for this pipeline run
+                original_github = self._github
+                self._github = fresh_github_client
+                try:
+                    await self._execute_pipeline(repo_repo, repo)
+                finally:
+                    self._github = original_github
+        finally:
+            await fresh_github_client.close()
 
     async def get_repository(self, repository_id: uuid.UUID) -> RepositoryResponse:
         """Return the full detail view of a single repository.

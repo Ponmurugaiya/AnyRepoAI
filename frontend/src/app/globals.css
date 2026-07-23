@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom CSS variables for design tokens */
 :root {
   --foreground: 240 10% 95%;
   --background: 240 10% 4%;
@@ -13,13 +12,31 @@
     box-sizing: border-box;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-gray-950 text-gray-100;
+  }
+
+  /* Subtle scrollbar for Webkit browsers */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-950;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-600;
   }
 }
 
 @layer utilities {
-  /* Utility for truncating multiline text */
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;

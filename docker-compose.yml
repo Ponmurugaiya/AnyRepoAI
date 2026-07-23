@@ -54,6 +54,11 @@ services:
       SCANNER_MAX_SCAN_DEPTH: "50"
       SCANNER_HASH_CHUNK_SIZE: "65536"
       SCANNER_DB_BATCH_SIZE: "500"
+      # Code Intelligence Engine
+      PARSER_PARSE_BATCH_SIZE: "20"
+      PARSER_PARSE_MAX_WORKERS: "4"
+      PARSER_PARSE_TIMEOUT_SECONDS: "60"
+      PARSER_MAX_FILE_SIZE_BYTES: "5242880"
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,7 +92,11 @@ services:
       target: runtime
     image: codebase-intel/backend:latest
     container_name: ci_celery_worker
-    command: celery -A backend.app.workers.celery_app.celery_app worker --loglevel=info --concurrency=2
+    user: root
+    command: >
+      bash -c "mkdir -p /storage/repos &&
+               chown -R appuser:appgroup /storage/repos &&
+               su appuser -c 'celery -A backend.app.workers.celery_app.celery_app worker --loglevel=info --concurrency=2'"
     environment:
       APP_ENVIRONMENT: development
       APP_LOG_LEVEL: INFO
@@ -111,6 +120,11 @@ services:
       SCANNER_MAX_SCAN_DEPTH: "50"
       SCANNER_HASH_CHUNK_SIZE: "65536"
       SCANNER_DB_BATCH_SIZE: "500"
+      # Code Intelligence Engine
+      PARSER_PARSE_BATCH_SIZE: "20"
+      PARSER_PARSE_MAX_WORKERS: "4"
+      PARSER_PARSE_TIMEOUT_SECONDS: "60"
+      PARSER_MAX_FILE_SIZE_BYTES: "5242880"
     depends_on:
       postgres:
         condition: service_healthy
@@ -135,6 +149,9 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Used by Next.js rewrites (server-side proxy → internal Docker hostname)
+      BACKEND_URL: http://backend:8000
+      # Used by browser fetch calls (must be reachable from the user's machine)
       NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
     depends_on:
       - backend

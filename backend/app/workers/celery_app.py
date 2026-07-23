@@ -34,7 +34,11 @@ def _make_celery() -> Celery:
         "codebase_intel",
         broker=settings.redis.url,
         backend=settings.redis.url,
-        include=["backend.app.workers.celery_app"],
+        include=[
+            "backend.app.workers.celery_app",
+            "backend.app.workers.scanner_tasks",
+            "backend.app.workers.parser_tasks",
+        ],
     )
 
     app.conf.update(
@@ -91,15 +95,14 @@ def clone_repository_task(self, repository_id: str) -> dict:
 
     async def _run() -> str:
         """Run the async pipeline and return the final status string."""
-        # Import here to avoid module-level circular imports
         from backend.app.db.session import init_db  # noqa: PLC0415
         from backend.app.services.repository_service import RepositoryService  # noqa: PLC0415
 
-        # Initialise DB connection pool for this worker process if not done yet
         init_db()
 
+        # Pass session=None — run_clone_pipeline opens its own session
+        # context internally and creates a fresh GitHubClient per run.
         service = RepositoryService(session=None)  # type: ignore[arg-type]
-        # run_clone_pipeline opens its own session context internally
         await service.run_clone_pipeline(repo_uuid)
         return "READY"
 
